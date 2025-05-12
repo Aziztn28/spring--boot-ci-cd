@@ -11,7 +11,7 @@ pipeline {
         // Étape 1 : Cloner le projet depuis GitHub
         stage('Cloner le projet') {
             steps {
-                git url: 'https://github.com/Aziztn28/spring-boot-ci-cd.git', branch: 'main'  // Remplacez par l'URL de votre repository GitHub
+                git url: 'https://github.com/Aziztn28/spring--boot-ci-cd.git', branch: 'main'  // Remplacez par l'URL de votre repository GitHub
             }
         }
 
