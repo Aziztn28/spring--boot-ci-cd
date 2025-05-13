@@ -1,45 +1,62 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven 3.8.6'   // Corrigé ici
+        jdk 'JDK 21'          // Assure-toi que ce nom existe aussi dans Jenkins
+    }
+
     environment {
-        SONAR_HOST_URL = 'http://localhost:8081'  // adapte si autre IP
+        MAVEN_HOME = tool 'Maven 3.8.6'
+        JAVA_HOME = tool 'JDK 21'
+        PATH = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${env.PATH}"
     }
 
     stages {
-
-        stage('Cloner le dépôt') {
+        stage('Checkout') {
             steps {
-                git url: 'https://github.com/Aziztn28/spring--boot-ci-cd.git', branch: 'main'
+                git branch: 'main',
+                    url: 'https://github.com/Aziztn28/spring--boot-ci-cd pipeline.git'
             }
         }
 
-        stage('Compilation Maven') {
+        stage('Build') {
             steps {
-                sh 'mvn clean install -DskipTests'
+                bat 'mvn clean compile'
             }
         }
 
-        stage('Analyse SonarQube') {
+        stage('Test') {
             steps {
-                withSonarQubeEnv('sonar-token') {
-                    sh 'mvn sonar:sonar -Dsonar.projectKey=springboot-ci -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=${SONAR_AUTH_TOKEN}'
-                }
+                bat 'mvn test'
             }
         }
 
-        stage('Docker Build') {
+        stage('Package') {
             steps {
-                sh 'docker build -t springboot-ci-app:latest .'
+                bat 'mvn package'
             }
         }
     }
 
+    stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('SonarQube') {
+            sh 'mvn sonar:sonar \
+                -Dsonar.projectKey=springboot-ci-cd-pipeline \
+                -Dsonar.host.url=http://localhost:8001 \
+                -Dsonar.login=<TON_TOKEN>'
+        }
+    }
+}
+
+
     post {
         success {
-            echo '✅ Pipeline exécuté avec succès !'
+            echo '✅ Build réussi !'
         }
         failure {
-            echo '❌ Échec du pipeline.'
+            echo '❌ Le build a échoué.'
         }
     }
 }
